@@ -4,3 +4,5 @@ numpy
 jupyter
 ipykernel
 huggingface_hub
+streamlit
+pillow
