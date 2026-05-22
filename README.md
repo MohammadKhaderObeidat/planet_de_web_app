@@ -4,173 +4,145 @@
 
 **AI-powered leaf disease classification for potato and tomato crops**
 
-> **Full runnable project:** `D:\plant_diseases_det`  
-> This folder is the original Git clone from GitHub. Models, dataset, and the web app live on `D:\`.
+This repository contains a local Streamlit web app and notebook for training a plant disease detection model on the `PlantVillage` dataset.
 
-<br/>
-
-[![Python](https://img.shields.io/badge/Python-3.13-blue?style=flat-square)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.11-blue?style=flat-square)](https://www.python.org/)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.21-orange?style=flat-square)](https://www.tensorflow.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-UI-red?style=flat-square)](https://streamlit.io/)
-
-**[📖 Full documentation](D:/plant_diseases_det/README.md)**
 
 </div>
 
 ---
 
-## 📦 Dataset
+## Project Summary
 
-**Dataset files are not on GitHub** — too large (~11k images). Download locally using one of the methods below.
+This project includes:
 
-### Where data is stored (on your PC)
+- `app.py` — Streamlit application for image upload, prediction, and result display
+- `plant.ipynb` — notebook containing dataset loading, model definition, training, evaluation, and saving
+- `technical_report.md` — full documentation of the work completed in this workspace
+- `download_dataset.py` — helper script to download the dataset if needed
+- `PlantVillage/` — local dataset directory with training images
+- `plant_model.keras` — trained Keras model artifact saved during this session
 
-| Item | Path |
-|------|------|
-| **Project root** | `D:\plant_diseases_det\` |
-| **Training images** | `D:\plant_diseases_det\PlantVillage\` |
-| **Downloaded archive** | `D:\plant_diseases_det\data.zip` (~2.1 GB) |
-| **Download script** | `D:\plant_diseases_det\download_dataset.py` |
-| **Trained models** | `D:\plant_diseases_det\potato_model.keras`, `tomato_model.keras` |
-| **Temp files** | `D:\plant_diseases_det\tmp\` |
+## Local Model and Dataset Status
 
-Inside `PlantVillage/` you get **6 class folders** (3 potato + 3 tomato), e.g.:
+This workspace now includes the dataset and the trained model artifact required to run the app locally.
 
-```
-D:\plant_diseases_det\PlantVillage\
-├── Potato___Early_blight\
-├── Potato___Late_blight\
-├── Potato___healthy\
-├── Tomato___Bacterial_spot\
-├── Tomato___Early_blight\
-└── Tomato___healthy\
-```
+- Dataset directory: `./PlantVillage`
+- Dataset images: 11,227 images across 6 classes
+- Saved trained model: `plant_model.keras`
 
-> This Git clone folder (`OneDrive\Desktop\det`) does **not** contain the dataset — only the notebook clone. All data and models are under **`D:\plant_diseases_det`**.
+### Classes
 
-### How to download
+- `Potato___Early_blight`
+- `Potato___Late_blight`
+- `Potato___healthy`
+- `Tomato_Bacterial_spot`
+- `Tomato__Tomato_YellowLeaf__Curl_Virus`
+- `Tomato_healthy`
 
-| Source | Link |
-|--------|------|
-| **Automatic (recommended)** | Run `download_dataset.py` — fetches potato & tomato subset from Hugging Face |
-| **Hugging Face (full)** | [mohanty/PlantVillage](https://huggingface.co/datasets/mohanty/PlantVillage) |
-| **Kaggle** | [Tomato leaf disease (notebook)](https://www.kaggle.com/code/rohanpatnaik/tomato-leaf-disease-image-classification/data) |
+## Model Architecture
 
-```powershell
-cd D:\plant_diseases_det
-pip install -r requirements.txt
-py -3.13 download_dataset.py
-```
+The model is a custom TensorFlow Keras `Sequential` CNN built from scratch. It includes:
 
-After download, images are extracted to `D:\plant_diseases_det\PlantVillage\` (excluded from Git via `.gitignore`).
+1. `Input` shape `(256, 256, 3)`
+2. `Resizing(256, 256)`
+3. `Rescaling(1./255)`
+4. `RandomFlip("horizontal_and_vertical")`
+5. `RandomRotation(0.2)`
+6. `Conv2D(16, 3, padding='same', activation='relu')`
+7. `MaxPooling2D()`
+8. `Conv2D(32, 3, padding='same', activation='relu')`
+9. `MaxPooling2D()`
+10. `Conv2D(64, 3, padding='same', activation='relu')`
+11. `MaxPooling2D()`
+12. `Dropout(0.2)`
+13. `Flatten()`
+14. `Dense(128, activation='relu')`
+15. `Dense(6, activation='softmax')`
 
----
+## Training Details
 
-## 🚦 How to Run
+The model was trained locally using the notebook and the following settings:
 
-Choose the guide that matches your situation.
+- `IMAGE_SIZE = 256`
+- `BATCH_SIZE = 32`
+- training on a subset of the dataset using `train_ds.take(50)`
+- validation using `val_ds.take(20)`
+- `epochs = 4`
+- optimizer: `adam`
+- loss: `SparseCategoricalCrossentropy(from_logits=False)`
+- metric: `accuracy`
 
----
+### Training result
 
-### 🆕 First Time — Fresh Install
+- Test accuracy: `0.8576`
+- Saved model file: `plant_model.keras`
 
-Use this when you are **setting up the project for the first time** on this computer.
+## How to Run Locally
 
-| Step | Action |
-|------|--------|
-| 1 | Install [Python 3.13](https://www.python.org/downloads/) |
-| 2 | Open **PowerShell** |
-| 3 | Run the commands below in order |
-| 4 | Open your browser at **http://localhost:8501** |
+### 1. Activate the virtual environment
 
-```powershell
-cd D:\plant_diseases_det
-
-$env:TEMP = "D:\plant_diseases_det\tmp"
-$env:TMP  = "D:\plant_diseases_det\tmp"
-
-py -3.13 -m pip install -r requirements.txt
-py -3.13 download_dataset.py
-py -3.13 train_split_models.py
-START.bat
+```bash
+source ./venv/bin/activate
 ```
 
-**Or the easiest way:** after Python and packages are installed, double-click:
+### 2. Run the Streamlit app
 
-```text
-D:\plant_diseases_det\START.bat
+```bash
+streamlit run app.py
 ```
 
-Training runs automatically if model files are missing.
+### 3. Open the browser
 
-| Stage | Approx. time |
-|-------|----------------|
-| Install packages | 5–10 min |
-| Download data (~2 GB) | 10–30 min |
-| Train models | 15–25 min |
-| Launch app | seconds |
+Go to: http://localhost:8501
 
----
+## If the Model File Is Missing
 
-### ✅ Already Installed on This Computer
+`app.py` now checks for a saved model file and shows a warning if none is available.
 
-Use this when **`D:\plant_diseases_det`** already exists with:
+Supported model file names:
+
+- `plant_model.keras`
 - `potato_model.keras`
 - `tomato_model.keras`
+- `plant_model.h5`
+- `potato_model.h5`
+- `tomato_model.h5`
 
-| Step | Action |
-|------|--------|
-| 1 | Open folder `D:\plant_diseases_det` |
-| 2 | Double-click **`START.bat`** |
-| 3 | Open **http://localhost:8501** |
+If the app cannot find a model file, add `plant_model.keras` to the folder and reload.
 
-```powershell
-cd D:\plant_diseases_det
-START.bat
-```
+## Project Files
 
-No need to re-download data or re-train — the app starts immediately.
+| File | Description |
+|------|-------------|
+| `app.py` | Streamlit app for model prediction and UI |
+| `plant.ipynb` | Notebook with dataset loading, model architecture, training, evaluation, and saving |
+| `technical_report.md` | Complete local documentation of the project and changes made |
+| `plant_model.keras` | Saved trained model artifact |
+| `download_dataset.py` | Dataset downloader helper script |
+| `README.md` | Project overview and local run instructions |
 
----
+## Notes
 
-### 🔍 Quick Check — Is Everything Ready?
-
-```powershell
-cd D:\plant_diseases_det
-Test-Path potato_model.keras
-Test-Path tomato_model.keras
-```
-
-| Result | Meaning |
-|--------|---------|
-| `True` for both | Ready — run `START.bat` only |
-| `False` | Run `train_split_models.py` once, or use `START.bat` |
+- This repo is now self-contained for local use with the existing dataset and saved model.
+- The original upstream README referenced a separate `D:\plant_diseases_det` project path, but this workspace contains the necessary local files.
+- Use `streamlit run app.py` rather than running `app.py` directly with Python to avoid Streamlit bare-mode warnings.
 
 ---
 
-### 📱 Using the App
+## Additional Information
 
-1. Select **Potato** 🥔 or **Tomato** 🍅
-2. Upload a leaf image (JPG / PNG)
-3. Read the diagnosis and confidence score
+If you want to retrain the model or improve accuracy:
 
----
-
-### ⚠️ Common Issues
-
-| Problem | Fix |
-|---------|-----|
-| `Models not found` | Run `py -3.13 train_split_models.py` |
-| `PlantVillage not found` | Run `py -3.13 download_dataset.py` |
-| C: drive full | Use `D:\` and set `tmp` folder (see commands above) |
-| Port 8501 in use | Close old Streamlit process or change the port |
+1. Open `plant.ipynb`
+2. Adjust data augmentation, architecture, or epochs
+3. Run the training cells
+4. Save the model again with `model.save('plant_model.keras')`
 
 ---
 
-## 📖 Full Documentation
+### Contact / Reference
 
-See **`D:\plant_diseases_det\README.md`** for Features, Installation, Deployment, API notes, License, and more.
-
----
-
-Based on [plant_diseases_detiction](https://github.com/Dhairyagoel10/plant_diseases_detiction)
+Based on the original [plant_diseases_detiction](https://github.com/Dhairyagoel10/plant_diseases_detiction) repository.

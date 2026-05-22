@@ -1,0 +1,30 @@
+# Python environment
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# Dataset / model files
+data.zip
+PlantVillage/
+plant_model.keras
+*.h5
+*.keras
+
+# Python version manager
+.python-version
+
+# Logs
+*.log
+
+# Editor directories
+.vscode/

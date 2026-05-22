@@ -51,6 +51,15 @@ with st.sidebar:
     for name in CLASS_NAMES:
         st.write(f"- {name.replace('_', ' ')}")
 
+MODEL_FILE_NAMES = [
+    "plant_model.keras",
+    "potato_model.keras",
+    "tomato_model.keras",
+    "plant_model.h5",
+    "potato_model.h5",
+    "tomato_model.h5",
+]
+
 # Function to load model
 @st.cache_resource
 def load_trained_model():
@@ -71,17 +80,33 @@ def load_trained_model():
         layers.Dense(128, activation='relu'),
         layers.Dense(len(CLASS_NAMES), activation='softmax')
     ])
-    
-    # Try to load weights if they exist
-    if os.path.exists("plant_model.keras"):
-        model.load_weights("plant_model.keras")
-    elif os.path.exists("potato_model.keras"):
-        # Note: This is a simplification since the notebook shows one model for both
-        model.load_weights("potato_model.keras")
-        
-    return model
 
-model = load_trained_model()
+    loaded_path = None
+    load_error = None
+
+    for candidate in MODEL_FILE_NAMES:
+        if os.path.exists(candidate):
+            loaded_path = candidate
+            try:
+                model.load_weights(candidate)
+            except Exception as err:
+                load_error = str(err)
+            break
+
+    return model, loaded_path, load_error
+
+model, model_path, model_error = load_trained_model()
+
+if model_path is None:
+    st.warning(
+        "No trained Keras model weights were found in this folder. "
+        "Add `plant_model.keras`, `potato_model.keras`, or `tomato_model.keras` to enable real predictions."
+    )
+else:
+    if model_error:
+        st.error(f"Failed to load model weights from {model_path}: {model_error}")
+    else:
+        st.success(f"Loaded trained model from `{model_path}`.")
 
 # Image uploader
 uploaded_file = st.file_uploader("Choose a leaf image...", type=["jpg", "jpeg", "png"])
@@ -97,21 +122,27 @@ if uploaded_file is not None:
     
     # Prediction button
     if st.button('Predict'):
-        with st.spinner('Analyzing...'):
-            predictions = model.predict(img_batch)
-            predicted_class = CLASS_NAMES[np.argmax(predictions[0])]
-            confidence = np.max(predictions[0])
-            
-            # Display results
-            st.success(f"Prediction: **{predicted_class.replace('_', ' ')}**")
-            st.info(f"Confidence: **{confidence:.2%}**")
-            
-            # Advice based on prediction
-            if "healthy" in predicted_class.lower():
-                st.balloons()
-                st.write("Your plant looks healthy! Keep up the good work.")
-            else:
-                st.warning("Detection suggests a disease. Please consult with an agricultural expert for treatment options.")
+        if model_path is None or model_error:
+            st.error(
+                "Cannot run prediction because no valid trained model weights are available. "
+                "Place a model file in the app folder and reload the page."
+            )
+        else:
+            with st.spinner('Analyzing...'):
+                predictions = model.predict(img_batch)
+                predicted_class = CLASS_NAMES[np.argmax(predictions[0])]
+                confidence = np.max(predictions[0])
+                
+                # Display results
+                st.success(f"Prediction: **{predicted_class.replace('_', ' ')}**")
+                st.info(f"Confidence: **{confidence:.2%}**")
+                
+                # Advice based on prediction
+                if "healthy" in predicted_class.lower():
+                    st.balloons()
+                    st.write("Your plant looks healthy! Keep up the good work.")
+                else:
+                    st.warning("Detection suggests a disease. Please consult with an agricultural expert for treatment options.")
 
 st.divider()
 st.caption("Note: This is a demonstration app. For accurate diagnosis, please ensure the image is clear and focused on a single leaf.")
